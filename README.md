@@ -1,0 +1,3 @@
+# Nature Inspired Computing for Gaming: Picross
+
+The goal of this project is to explore and compare the efficiency of multiple Nature Inspired Computing (NIC) algorithms in solving Picross puzzles (also known as Nonograms). Picross is a logic-based puzzle where players fill a grid based on numerical clues, forming a hidden image. We aim to implement and analyze nature inspired techniques such as Genetic Algorithms (GA) and Simulated Annealing (SA) to see which performs best under different puzzle conditions. We will compare algorithms based on Solution accuracy, Time complexity, and Scalability.
