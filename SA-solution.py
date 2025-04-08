@@ -1,16 +1,24 @@
 import random
 import numpy as np
 from numpy.typing import NDArray
+import time
+import json
+from utils import check, save_result
 
-# Define row and column constraints for the Picross puzzle
-row_constraints = [[1], [3], [5], [3], [1]]
-col_constraints = [[1], [3], [5], [3], [1]]
+# Set global vars for the solver
+initial_temperature = 10.0
+cooling_rate = 0.999
+iterations = 10000
 
-# Define problem parameters
-grid_size = len(row_constraints)  # Assuming a square grid
-initial_temperature = 10.0  # Starting temperature for simulated annealing
-cooling_rate = 0.999  # Rate at which temperature decreases
-iterations = 10000  # Number of iterations for annealing process
+# Load puzzles
+with open("small.txt") as f:
+    small = [json.loads(line) for line in f]
+with open("medium.txt") as f:
+    medium = [json.loads(line) for line in f]
+with open("large.txt") as f:
+    large = [json.loads(line) for line in f]
+
+results = {"small": [], "medium": [], "large": []}
 
 def evaluate(grid: NDArray[np.long]) -> int:
     """
@@ -80,11 +88,23 @@ def simulated_annealing() -> NDArray[np.long]:
         if best_score == grid_size * 2:
             break
 
-    # Display the best solution found
-    print("Best solution:")
-    print(best_grid)
-
     return best_grid
 
 # Run the simulated annealing algorithm to solve the Picross puzzle
-solved_grid = simulated_annealing()
+if __name__ == "__main__":
+    
+    for size_name, puzzles in [("small", small), ("medium", medium), ("large", large)]:
+        for puzzle in puzzles:
+            row_constraints = puzzle["row"]
+            col_constraints = puzzle["col"]
+            grid_size = len(row_constraints)
+
+            start = time.time()
+            grid = simulated_annealing()
+            end = time.time()
+            print(end - start)
+            correct = check(grid, row_constraints, col_constraints)
+            results[size_name].append({"solved": correct, "time": end - start})
+
+    # Save results
+    save_result(results, "SA-results.json")

@@ -1,15 +1,24 @@
 import random
 import numpy as np
+from numpy.typing import NDArray
+import time
+import json
+from utils import check, save_result
 
-# Define row and column constraints for the Picross puzzle
-row_constraints = [[1], [3], [5], [3], [1]]
-col_constraints = [[1], [3], [5], [3], [1]]
+# Set global vars for the solver
+mutation_rate = 0.01
+generations = 100
+population_size = 100
 
-# Define problem parameters
-grid_size = len(row_constraints)  # Assuming a square grid
-population_size = 300  # Number of individuals in the population
-generations = 100  # Number of generations for evolution
-mutation_rate = 0.1  # Probability of mutation for each gene
+# Load puzzles
+with open("small.txt") as f:
+    small = [json.loads(line) for line in f]
+with open("medium.txt") as f:
+    medium = [json.loads(line) for line in f]
+with open("large.txt") as f:
+    large = [json.loads(line) for line in f]
+
+results = {"small": [], "medium": [], "large": []}
 
 def create_individual() -> list[int]:
     """Generate a random individual (binary grid representation)."""
@@ -52,7 +61,7 @@ def mutate(individual: list[int]) -> None:
         if random.random() < mutation_rate:  
             individual[i] = 1 - individual[i]  # Flip the bit (0 → 1, 1 → 0)
 
-def solve_picross() -> None:
+def genetic_algorithm() -> NDArray[np.long]:
     """Solve the Picross puzzle using a genetic algorithm."""
     population = [create_individual() for _ in range(population_size)]
 
@@ -79,8 +88,24 @@ def solve_picross() -> None:
 
     # Display the best solution found
     best_solution = np.array(best_individual).reshape((grid_size, grid_size))
-    print("Best solution:")
-    print(best_solution)
+    
+    return best_solution
 
 # Run the genetic algorithm to solve the Picross puzzle
-solve_picross()
+if __name__ == "__main__":
+    
+    for size_name, puzzles in [("small", small), ("medium", medium), ("large", large)]:
+        for puzzle in puzzles:
+            row_constraints = puzzle["row"]
+            col_constraints = puzzle["col"]
+            grid_size = len(row_constraints)
+
+            start = time.time()
+            grid = genetic_algorithm()
+            end = time.time()
+            print(end - start)
+            correct = check(grid, row_constraints, col_constraints)
+            results[size_name].append({"solved": correct, "time": end - start})
+
+    # Save results
+    save_result(results, "GA-results.json")
